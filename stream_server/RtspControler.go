@@ -3,6 +3,7 @@ package stream_server
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/stream_server/rtsp"
 )
@@ -22,7 +23,8 @@ func (r *RtspControler) Control(req *rtsp.Request) *rtsp.Response {
 	switch req.Method {
 	case rtsp.OPTIONS:
 		resp := rtsp.NewResponse(rtsp.OK, "OK", cSeq, "")
-		resp.Header["Public"] = []string{rtsp.OPTIONS, rtsp.DESCRIBE, rtsp.SETUP, rtsp.PLAY, rtsp.TEARDOWN}
+		options := strings.Join([]string{rtsp.OPTIONS, rtsp.DESCRIBE, rtsp.SETUP, rtsp.PLAY, rtsp.TEARDOWN}, ", ")
+		resp.Header["Public"] = []string{options}
 		return resp
 	case rtsp.DESCRIBE:
 		path := reqUrl.Path
