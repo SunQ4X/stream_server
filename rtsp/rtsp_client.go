@@ -40,12 +40,9 @@ func (c *Client) nextCSeq() string {
 }
 
 func (c *Client) Options() (*Response, error) {
-	req, err := NewRequest(OPTIONS, c.url, c.nextCSeq(), "")
-	if err != nil {
-		return nil, err
-	}
+	req := NewRequest(OPTIONS, c.url, c.nextCSeq(), "")
 
-	_, err = io.WriteString(c.conn, req.String())
+	_, err := io.WriteString(c.conn, req.String())
 	if err != nil {
 		return nil, err
 	}
@@ -60,13 +57,10 @@ func (c *Client) Options() (*Response, error) {
 }
 
 func (c *Client) Describe() (*Response, error) {
-	req, err := NewRequest(DESCRIBE, c.url, c.nextCSeq(), "")
-	if err != nil {
-		return nil, err
-	}
+	req := NewRequest(DESCRIBE, c.url, c.nextCSeq(), "")
 
 	req.Header.Add("Accept", "application/sdp")
-	_, err = io.WriteString(c.conn, req.String())
+	_, err := io.WriteString(c.conn, req.String())
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +75,10 @@ func (c *Client) Describe() (*Response, error) {
 }
 
 func (c *Client) Setup(transport string) (*Response, error) {
-	req, err := NewRequest(SETUP, c.url, c.nextCSeq(), "")
-	if err != nil {
-		return nil, err
-	}
+	req := NewRequest(SETUP, c.url, c.nextCSeq(), "")
 
 	req.Header.Add("Transport", transport)
-	_, err = io.WriteString(c.conn, req.String())
+	_, err := io.WriteString(c.conn, req.String())
 	if err != nil {
 		return nil, err
 	}
@@ -103,13 +94,10 @@ func (c *Client) Setup(transport string) (*Response, error) {
 }
 
 func (c *Client) Play() (*Response, error) {
-	req, err := NewRequest(PLAY, c.url, c.nextCSeq(), "")
-	if err != nil {
-		return nil, err
-	}
+	req := NewRequest(PLAY, c.url, c.nextCSeq(), "")
 
 	req.Header.Add("Session", c.sessionId)
-	_, err = io.WriteString(c.conn, req.String())
+	_, err := io.WriteString(c.conn, req.String())
 	if err != nil {
 		return nil, err
 	}
@@ -124,13 +112,10 @@ func (c *Client) Play() (*Response, error) {
 }
 
 func (c *Client) Teardown() (*Response, error) {
-	req, err := NewRequest(TEARDOWN, c.url, c.nextCSeq(), "")
-	if err != nil {
-		return nil, err
-	}
+	req := NewRequest(TEARDOWN, c.url, c.nextCSeq(), "")
 
 	req.Header.Add("Session", c.sessionId)
-	_, err = io.WriteString(c.conn, req.String())
+	_, err := io.WriteString(c.conn, req.String())
 	if err != nil {
 		return nil, err
 	}

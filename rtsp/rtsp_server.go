@@ -3,48 +3,49 @@ package rtsp
 import (
 	"fmt"
 	"net"
-	"os"
+	"runtime"
 )
 
 type Server struct {
-	tcpListenr net.Listener
+	tcpListener net.Listener
+	controler   Controler
 }
 
-func NewServer(address string) *Server {
+func NewServer(address string, controler Controler) (*Server, error) {
 	server := &Server{}
 
 	tcpListener, err := net.Listen("tcp", address)
 	if err != nil {
-		fmt.Println("ERROR: listen (%s) failed - %s", address, err)
+		fmt.Println("ERROR: listen (", address, ") failed -", err)
 		return nil, err
 	}
 
-	server.tcpListenr = tcpListener
+	server.tcpListener = tcpListener
+	server.controler = controler
 
-	go func(listener net.Listener) {
-		fmt.Println("Listen on %s", listener.Addr())
+	return server, nil
+}
 
-		for {
-			clientConn, err := listener.Accept()
-			if err != nil {
-				//若是暂时性错误，则继续监听，否则直接退出
-				if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
-					fmt.Println("NOTICE: temporary Accept() failure - %s", err)
-					runtime.Gosched()
-					continue
-				}
+func (s *Server) Run() {
+	fmt.Println("RTSP Listen on", s.tcpListener.Addr())
 
-				if !strings.Contains(err.Error(), "use of closed network connection") {
-					fmt.Println("ERROR: listener.Accept() - %s", err)
-				}
-				break
+	for {
+		clientConn, err := s.tcpListener.Accept()
+		if err != nil {
+			//若是暂时性错误，则继续监听，否则直接退出
+			if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
+				fmt.Println("NOTICE: temporary Accept() failure -", err)
+				runtime.Gosched()
+				continue
 			}
 
-			session := NewSession(clientConn)
-
-			go session.Handle()
+			break
 		}
-	}(server.tcpListenr)
 
-	return server
+		session := NewSession(clientConn)
+
+		go session.Handle(s.controler)
+	}
+
+	fmt.Println("RTSP Stop listenning on", s.tcpListener.Addr())
 }

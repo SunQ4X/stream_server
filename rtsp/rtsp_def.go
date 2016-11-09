@@ -1,6 +1,7 @@
 package rtsp
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -155,7 +156,7 @@ type Request struct {
 	Body    string
 }
 
-func NewRequest(method, url, cSeq, body string) (*Request, error) {
+func NewRequest(method, url, cSeq, body string) *Request {
 	req := &Request{
 		Method:  method,
 		URL:     url,
@@ -163,7 +164,7 @@ func NewRequest(method, url, cSeq, body string) (*Request, error) {
 		Header:  map[string][]string{"CSeq": []string{cSeq}},
 		Body:    body,
 	}
-	return req, nil
+	return req
 }
 
 func (r *Request) String() string {
@@ -178,8 +179,16 @@ func (r *Request) String() string {
 	return str
 }
 
-func ReadRequest(r io.Reader) (*Request, error) {
-	req := &Request{
+func ReadRequest(r io.Reader) (req *Request, err error) {
+	defer func() {
+		if re := recover(); re != nil {
+			fmt.Println("run time panic:", re)
+			req = nil
+			err = errors.New("run time panic")
+		}
+	}()
+
+	req = &Request{
 		Header: make(map[string][]string),
 	}
 
@@ -240,7 +249,7 @@ type Response struct {
 	Body       string
 }
 
-func NewResponse(statusCode int, status, cSeq, body string) (*Response, error) {
+func NewResponse(statusCode int, status, cSeq, body string) *Response {
 	res := &Response{
 		Version:    RTSP_VERSION,
 		StatusCode: statusCode,
@@ -248,7 +257,7 @@ func NewResponse(statusCode int, status, cSeq, body string) (*Response, error) {
 		Header:     map[string][]string{"CSeq": []string{cSeq}},
 		Body:       body,
 	}
-	return res, nil
+	return res
 }
 
 func (r *Response) String() string {
@@ -263,8 +272,16 @@ func (r *Response) String() string {
 	return str
 }
 
-func ReadResponse(r io.Reader) (*Response, error) {
-	res := &Response{
+func ReadResponse(r io.Reader) (res *Response, err error) {
+	defer func() {
+		if re := recover(); re != nil {
+			fmt.Println("run time panic:", re)
+			res = nil
+			err = errors.New("run time panic")
+		}
+	}()
+
+	res = &Response{
 		Header: make(map[string][]string),
 	}
 

@@ -3,7 +3,6 @@ package rtsp
 import (
 	"fmt"
 	"net"
-	"os"
 )
 
 type Session struct {
@@ -11,13 +10,13 @@ type Session struct {
 }
 
 func NewSession(conn net.Conn) *Session {
-	sess := &Session{conn}
+	sess := &Session{conn: conn}
 
 	return sess
 }
 
-func (sess *Session) Handle() {
-	fmt.Println("Session:%s handling.", sess.conn.RemoteAddr())
+func (sess *Session) Handle(controler Controler) {
+	fmt.Println("------ Session[", sess.conn.RemoteAddr(), "] : handling ------")
 
 	for {
 		req, err := ReadRequest(sess.conn)
@@ -25,7 +24,15 @@ func (sess *Session) Handle() {
 			break
 		}
 
+		fmt.Println("------ Session[", sess.conn.RemoteAddr(), "] : get request ------ \n", req)
+		//TODO
+		//处理RTSP请求
+		resp := controler.Control(req)
+
+		sess.conn.Write([]byte(resp.String()))
+		fmt.Println("------ Session[", sess.conn.RemoteAddr(), "] : set response ------ \n", resp)
 	}
 
-	fmt.Println("Session:%s closed.", sess.conn.RemoteAddr())
+	sess.conn.Close()
+	fmt.Println("------ Session[", sess.conn.RemoteAddr(), "] : closed ------")
 }
