@@ -8,10 +8,9 @@ import (
 
 type Server struct {
 	tcpListener net.Listener
-	controler   Controler
 }
 
-func NewServer(address string, controler Controler) (*Server, error) {
+func NewServer(address string) (*Server, error) {
 	server := &Server{}
 
 	tcpListener, err := net.Listen("tcp", address)
@@ -21,7 +20,6 @@ func NewServer(address string, controler Controler) (*Server, error) {
 	}
 
 	server.tcpListener = tcpListener
-	server.controler = controler
 
 	return server, nil
 }
@@ -42,9 +40,9 @@ func (s *Server) Run() {
 			break
 		}
 
-		session := NewSession(clientConn)
+		conn := NewRtspClientConnection(clientConn)
 
-		go session.Handle(s.controler)
+		go conn.Handle()
 	}
 
 	fmt.Println("RTSP Stop listenning on", s.tcpListener.Addr())

@@ -33,8 +33,7 @@ func (s *StreamServer) Wrap(cb func()) {
 }
 
 func (s *StreamServer) Run() {
-	rtspControler := &RtspControler{s}
-	rtspServer, err := rtsp.NewServer(s.getOpts().RTSPAddress, rtspControler)
+	rtspServer, err := rtsp.NewServer(s.getOpts().RTSPAddress)
 	if err != nil {
 		return
 	}
