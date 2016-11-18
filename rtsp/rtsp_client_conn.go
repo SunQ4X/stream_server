@@ -27,13 +27,13 @@ func (conn *RtspClientConnection) Handle() {
 			break
 		}
 
-		fmt.Printf("------ rtsp client connection[%s] : get request ------ \n%x\n", conn.conn.RemoteAddr(), req)
+		fmt.Printf("------ rtsp client connection[%s] : get request ------ \n%s\n", conn.conn.RemoteAddr(), req)
 
 		//处理RTSP请求
 		resp := conn.handleRequestAndReturnResponse(req)
 
 		conn.conn.Write([]byte(resp.String()))
-		fmt.Printf("------ Session[%s] : set response ------ \n%x\n", conn.conn.RemoteAddr(), resp)
+		fmt.Printf("------ Session[%s] : set response ------ \n%s\n", conn.conn.RemoteAddr(), resp)
 	}
 
 	conn.conn.Close()

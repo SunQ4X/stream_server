@@ -6,12 +6,12 @@ import (
 	"runtime"
 )
 
-type Server struct {
+type RtspServer struct {
 	tcpListener net.Listener
 }
 
-func NewServer(address string) (*Server, error) {
-	server := &Server{}
+func NewRtspServer(address string) (*Server, error) {
+	server := &RtspServer{}
 
 	tcpListener, err := net.Listen("tcp", address)
 	if err != nil {

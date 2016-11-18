@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/stream_server/util"
 )
@@ -19,6 +20,7 @@ type MediaSession struct {
 }
 
 var (
+	MapMutex   sync.Mutex
 	SessionMap map[string]*MediaSession
 )
 
@@ -47,11 +49,17 @@ func NewMediaSession(streamName string) (*MediaSession, error) {
 	util.GetCurrentTimeVal(&sess.timeval)
 	sess.ipAddress, _ = util.GetLocalIPAddress()
 
+	MapMutex.Lock()
+	SessionMap[streamName] = sess
+	MapMutex.Unlock()
+
 	return sess, nil
 }
 
 func LookupMediaSession(streamName string) (*MediaSession, bool) {
+	MapMutex.Lock()
 	v, ok := SessionMap[streamName]
+	MapMutex.Unlock()
 	return v, ok
 }
 
