@@ -3,8 +3,6 @@ package rtsp
 import (
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"strconv"
 	"strings"
 )
@@ -36,9 +34,9 @@ const (
 	SET_PARAMETER = "SET_PARAMETER"
 	// Client to server for presentation and stream objects; required
 	TEARDOWN = "TEARDOWN"
+	//自定义扩展
+	ANTSCOMB_ADDCH = "ANTSCOMB_ADDCH"
 )
-
-const ()
 
 const (
 	// all requests
@@ -152,7 +150,7 @@ type Request struct {
 	Method  string
 	URL     string
 	Version string
-	Header  http.Header
+	Header  map[string]string
 	Body    string
 }
 
@@ -161,46 +159,38 @@ func NewRequest(method, url, cSeq, body string) *Request {
 		Method:  method,
 		URL:     url,
 		Version: RTSP_VERSION,
-		Header:  map[string][]string{"CSeq": []string{cSeq}},
+		Header:  make(map[string]string),
 		Body:    body,
 	}
+
+	req.Header["CSeq"] = cSeq
+
 	return req
 }
 
 func (r *Request) String() string {
 	str := fmt.Sprintf("%s %s %s\r\n", r.Method, r.URL, r.Version)
-	for key, values := range r.Header {
-		for _, value := range values {
-			str += fmt.Sprintf("%s: %s\r\n", key, value)
-		}
+	for key, value := range r.Header {
+		str += fmt.Sprintf("%s: %s\r\n", key, value)
 	}
 	str += "\r\n"
 	str += r.Body
 	return str
 }
 
-func ReadRequest(r io.Reader) (req *Request, err error) {
+func ReadRequest(str string) (req *Request, err error) {
 	defer func() {
 		if re := recover(); re != nil {
-			fmt.Println("run time panic:", re)
 			req = nil
 			err = errors.New("run time panic")
 		}
 	}()
 
 	req = &Request{
-		Header: make(map[string][]string),
+		Header: make(map[string]string),
 	}
 
-	buffer := make([]byte, 2048)
-	len, err := r.Read(buffer)
-	if err != nil && len <= 0 {
-		return nil, err
-	}
-
-	recv := string(buffer[:len])
-
-	context := strings.SplitN(recv, "\r\n\r\n", 2)
+	context := strings.SplitN(str, "\r\n\r\n", 2)
 	header := context[0]
 	body := context[1]
 
@@ -218,7 +208,7 @@ func ReadRequest(r io.Reader) (req *Request, err error) {
 		parts = strings.SplitN(pair, ": ", 2)
 		key := parts[0]
 		value := parts[1]
-		req.Header.Add(key, value)
+		req.Header[key] = value
 	}
 
 	req.Body = string(body)
@@ -245,7 +235,7 @@ type Response struct {
 	Version    string
 	StatusCode int
 	Status     string
-	Header     http.Header
+	Header     map[string]string
 	Body       string
 }
 
@@ -254,25 +244,26 @@ func NewResponse(statusCode int, status, cSeq, body string) *Response {
 		Version:    RTSP_VERSION,
 		StatusCode: statusCode,
 		Status:     status,
-		Header:     map[string][]string{"CSeq": []string{cSeq}},
+		Header:     make(map[string]string),
 		Body:       body,
 	}
+
+	res.Header["CSeq"] = cSeq
+
 	return res
 }
 
 func (r *Response) String() string {
 	str := fmt.Sprintf("%s %d %s\r\n", r.Version, r.StatusCode, r.Status)
-	for key, values := range r.Header {
-		for _, value := range values {
-			str += fmt.Sprintf("%s: %s\r\n", key, value)
-		}
+	for key, value := range r.Header {
+		str += fmt.Sprintf("%s: %s\r\n", key, value)
 	}
 	str += "\r\n"
 	str += r.Body
 	return str
 }
 
-func ReadResponse(r io.Reader) (res *Response, err error) {
+func ReadResponse(str string) (res *Response, err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			fmt.Println("run time panic:", re)
@@ -282,18 +273,10 @@ func ReadResponse(r io.Reader) (res *Response, err error) {
 	}()
 
 	res = &Response{
-		Header: make(map[string][]string),
+		Header: make(map[string]string),
 	}
 
-	buffer := make([]byte, 2048)
-	len, err := r.Read(buffer)
-	if err != nil && len <= 0 {
-		return nil, err
-	}
-
-	recv := string(buffer[:len])
-
-	context := strings.SplitN(recv, "\r\n\r\n", 2)
+	context := strings.SplitN(str, "\r\n\r\n", 2)
 	header := context[0]
 	body := context[1]
 
@@ -313,7 +296,7 @@ func ReadResponse(r io.Reader) (res *Response, err error) {
 		parts = strings.SplitN(pair, ": ", 2)
 		key := parts[0]
 		value := parts[1]
-		res.Header.Add(key, value)
+		res.Header[key] = value
 	}
 
 	res.Body = string(body)

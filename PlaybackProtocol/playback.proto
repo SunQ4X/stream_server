@@ -1,0 +1,62 @@
+syntax	=	"proto3";	 //	指定proto版本
+package	PlaybackProtocol; //	指定默认包名
+
+service Playback {
+   rpc open(OpenRequest) returns (OpenReply) {};
+   rpc stream(StreamRequest) returns (stream StreamReply) {};
+   rpc close(CloseRequest) returns (CloseReply) {};
+   rpc seek(SeekRequest) returns (SeekReply) {};
+}
+
+message Channel{
+	string device = 1;
+	uint32 ch = 2;
+}
+
+message OpenRequest{
+	repeated Channel channels = 1;
+	uint64 beginTime = 2;
+	uint64 endTime = 3;
+	uint32 streamType = 4;
+	uint32 recordType = 5;
+	uint32 orAnd = 6;
+}
+
+message OpenReply{
+	string error = 1;
+	uint64 handle = 2;
+}
+
+message StreamRequest{
+	uint64 handle = 1;
+}
+
+message StreamReply {
+	string error = 1;
+	uint32 dataSize = 3;
+	bytes data = 4;
+	string device = 5;
+	uint32 ch = 6;
+	uint64 pid = 7;
+	string checksum = 8;
+}
+
+message CloseRequest{
+	uint64 handle = 1;
+}
+
+message CloseReply{
+	string error = 1;
+}
+
+message SeekRequest{
+	uint64 handle = 1;
+	uint64 seekTime = 2;
+	uint32 streamType = 3;
+	uint32 recordType = 4;
+	uint32 orAnd = 5;
+}
+
+message SeekReply{
+	string error = 1;
+}
