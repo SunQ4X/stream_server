@@ -140,39 +140,36 @@ func (buffer *RealtimeBuffer) handleData() {
 			return
 		}
 
-		readBuffer := bufferPool.getBuffer()
-		if readBuffer == nil {
-			logger.Debug("获取不到数据缓存", buffer.channel)
-			time.Sleep(time.Millisecond * 2)
-			continue
-		}
+		func() {
+			defer time.Sleep(time.Microsecond)
 
-		length, err := buffer.device.GetRealtimeData(buffer.handle, readBuffer.data)
-		if err != nil || length == 0 {
-			logger.Debug("获取数据失败", buffer.channel)
-			readBuffer.release()
-			continue
-		}
-
-		// var before *antsFrameHeader = (*antsFrameHeader)(unsafe.Pointer(&readBuffer.data[0]))
-		// if !(before.frameType == 1 || before.frameType == 9 || before.frameType == 18 || before.frameType == 19) {
-		// 	readBuffer.release()
-		// 	continue
-		// }
-
-		readBuffer.length = length
-
-		for _, dataChan := range buffer.dataChans {
-			readBuffer.addReference()
-			select {
-			case dataChan <- readBuffer:
-			default:
-				readBuffer.release()
-				logger.Debug("数据插入失败", buffer.channel)
+			readBuffer := bufferPool.getBuffer()
+			if readBuffer == nil {
+				logger.Debug("获取不到数据缓存", buffer.channel)
+				return
 			}
-		}
 
-		readBuffer.release()
+			defer readBuffer.release()
+
+			length, err := buffer.device.GetRealtimeData(buffer.handle, readBuffer.data)
+			if err != nil || length == 0 {
+				logger.Debug("获取数据失败", buffer.channel)
+				return
+			}
+
+			readBuffer.length = length
+
+			for _, dataChan := range buffer.dataChans {
+				readBuffer.addReference()
+				select {
+				case dataChan <- readBuffer:
+				default:
+					readBuffer.release()
+					logger.Debug("数据插入失败", buffer.channel)
+				}
+			}
+		}()
+
 	}
 }
 
